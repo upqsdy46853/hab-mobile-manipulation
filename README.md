@@ -110,59 +110,21 @@ python habitat_extensions/tasks/rearrange/play.py  --cfg configs/rearrange/skill
 
 ## Evaluation
 
-### Evaluate a sub-task
-
 ```bash
-# Evaluate the latest checkpoint of a skill saved at "data/results/rearrange/skills/tidy_house/pick_v1_joint_SCR"
-python mobile_manipulation/run_ppo.py --cfg configs/rearrange/skills/tidy_house/pick_v1_joint_SCR.yaml --run-type eval
-# Evaluate the latest checkpoint of a skill saved at "data/results/rearrange/skills/tidy_house/pick_v1_joint_SCR/seed=100"
-python mobile_manipulation/run_ppo.py --cfg configs/rearrange/skills/tidy_house/pick_v1_joint_SCR.yaml --run-type eval --run-type eval PREFIX seed=100
-```
-
-Pretrained skills can be downloaded [here](https://drive.google.com/drive/folders/1u7DAd25PE818wjg-MxDKJ7y5n8GQtfrz?usp=sharing).
-
-```bash
-pip install gdown
-gdown https://drive.google.com/drive/folders/1u7DAd25PE818wjg-MxDKJ7y5n8GQtfrz -O data/results/rearrange/skills --folder
-```
-
-### Evaluate a HAB (Home Assistant Benchmark) task
-
-```bash
-# Interactively visualize results
-python mobile_manipulation/eval_composite.py --cfg configs/rearrange/composite/tidy_house/mr.yaml --viewer --render-info
-# Save results
-# "--no-rgb" can be passed to the script to accelerate if rgb is not used.
-python mobile_manipulation/eval_composite.py --cfg configs/rearrange/composite/tidy_house/mr.yaml --save-log
-# Save videos
-python mobile_manipulation/eval_composite.py --cfg configs/rearrange/composite/tidy_house/mr.yaml --save-video all
-```
-
----
-
-We provide a script to evaluate a HAB task for multiple runs (different training and evaluation seeds).
-
-```bash
-BG=1 bash scripts/eval_composite.sh configs/rearrange/composite/tidy_house/mr.yaml
-```
-
-To collect evaluation results of multiple runs:
-
-```bash
-# By default, there will also be a timestamp in the path
-python scripts/collect_results.py -d data/results/rearrange/composite/tidy_house/mr
+# Evaluate the latest checkpoint of a skill saved at "data/results/rearrange/skills/tidy_house/mono_v1_ppo_v0_SCR"
+python mobile_manipulation/run_ppo.py --cfg configs/rearrange/skills/tidy_house/mono_v1_ppo_v0_SCR.yaml --run-type eval
+# Evaluate the latest checkpoint of a skill saved at "data/results/rearrange/skills/tidy_house/mono_v1_ppo_v0_SCR/seed=100"
+python mobile_manipulation/run_ppo.py --cfg configs/rearrange/skills/tidy_house/mono_v1_ppo_v0_SCR.yaml --run-type eval PREFIX seed=101 TASK_CONFIG.SEED 101
 ```
 
 ## Training
 
-Train an individual skill (e.g., *Pick* for TidyHouse):
-
 ```bash
-# The result will be saved at "data/results/rearrange/skills/tidy_house/pick_v1_joint_SCR".
-python mobile_manipulation/run_ppo.py --cfg configs/rearrange/skills/tidy_house/pick_v1_joint_SCR.yaml --run-type train
+# The result will be saved at "data/results/rearrange/skills/tidy_house/mono_v1_ppo_v0_SCR".
+python mobile_manipulation/run_ppo.py --cfg configs/rearrange/skills/tidy_house/mono_v1_ppo_v0_SCR.yaml --run-type train
 # Specify a prefix and a random seed for the experiment.
-# The result will be saved at "data/results/rearrange/skills/tidy_house/pick_v1_joint_SCR/seed=101" 
-python mobile_manipulation/run_ppo.py --cfg configs/rearrange/skills/tidy_house/pick_v1_joint_SCR.yaml --run-type train PREFIX seed=101 TASK_CONFIG.SEED 101
+# The result will be saved at "data/results/rearrange/skills/tidy_house/mono_v1_ppo_v0_SCR/seed=101" 
+python mobile_manipulation/run_ppo.py --cfg configs/rearrange/skills/tidy_house/mono_v1_ppo_v0_SCR.yaml --run-type train PREFIX seed=101 TASK_CONFIG.SEED 101
 ```
 
 ## Acknowledgments
