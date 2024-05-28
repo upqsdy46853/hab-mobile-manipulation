@@ -58,7 +58,7 @@ def reset():
     return obs, info
 
 if __name__ == "__main__":
-    config = get_config('configs/rearrange/skills/tidy_house/mono_v1_ppo_v0_SCR.yaml')
+    config = get_config('configs/rearrange/skills/tidy_house/mono_v2_ppo_v0_SCR.yaml')
     #config = get_config('configs/rearrange/skills/tidy_house/pick_v1_joint_SCR.yaml')
     env_cls = baseline_registry.get_env(config.ENV_NAME)
     env = env_cls(config)

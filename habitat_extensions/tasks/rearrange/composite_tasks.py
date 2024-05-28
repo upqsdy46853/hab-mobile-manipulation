@@ -9,6 +9,8 @@ from .task_utils import (
     check_start_state,
     compute_start_state,
     sample_random_start_state_v1,
+    compute_region_goals_v1,
+    sample_noisy_start_state,
 )
 
 
@@ -178,3 +180,97 @@ class SetTableTask(RearrangeTask):
         ret = self._sim.render(mode)
         self._sim.set_object_bb_draw(False, self.tgt_obj.object_id)
         return ret
+
+@registry.register_task(name="TidyHouseTask-v1")
+class TidyHouseTaskV1(TidyHouseTask):
+    def initialize(self, episode: RearrangeEpisode):
+        task = np.random.randint(2) # 0 for pick, 1 for place
+
+        if self._config.get("FRIDGE_INIT", False):
+            self._sim.set_fridge_state_by_motor(2.356)
+
+        # Cache start positions
+        self.obj_start_pos = self._sim.get_rigid_objs_pos_dict()
+        tgt_idx = self._config.get("TARGET_INDEX", 0)
+        if tgt_idx == -1:
+            tgt_idx = self.np_random.choice(len(self._sim.targets))
+        self.set_target(tgt_idx)
+
+        start_state = self.sample_start_state(episode, task)
+
+        if start_state is None:
+            start_state = self.sample_start_state(episode, task, no_validation=True)
+            logger.warning(
+                "Episode {}({}): sample a start state without validation".format(
+                    episode.episode_id, episode.scene_id
+                )
+            )
+
+        self._sim.robot.base_pos = start_state[0]
+        self._sim.robot.base_ori = start_state[1]
+        if task == 1:
+            self._sim.robot.open_gripper()
+            self._sim.gripper.snap_to_obj(self.tgt_obj)
+        self._sim.internal_step_by_time(0.1)
+
+    def sample_start_state(self, episode, task, max_trials=20, verbose=False, no_validation=False):
+        goal_pos = self.pick_goal if task == 0 else self.place_goal
+        start_pos, _ = compute_start_state(self._sim, goal_pos)
+        height = start_pos[1]
+        T = mn.Matrix4.translation(goal_pos)
+        start_positions = compute_region_goals_v1(
+            self._sim,
+            T,
+            region=None,
+            radius=2.0,
+            height=height,
+            max_radius=2.0,
+            debug=False,
+        )
+
+        if start_positions is None or len(start_positions) == 0:
+            logger.warning(
+                "Episode {} ({}): Unable to find any navigable point around the {}-th target given the map.".format(
+                    episode.episode_id, episode.scene_id, self.tgt_idx
+                )
+            )
+            return None
+
+        pos_noise = self._config.get("BASE_NOISE", 0.05)
+        ori_noise = self._config.get("BASE_ANGLE_NOISE", 0.15)
+
+        for i in range(max_trials):
+            # Avoid extreme end-effector positions by resampling each time
+            self._initialize_ee_pos()
+
+            ind = self.np_random.choice(len(start_positions))
+            start_state = sample_noisy_start_state(
+                self._sim,
+                start_positions[ind],
+                # pick_goal,
+                goal_pos,  # Note we use goal specification here!
+                pos_noise=pos_noise,
+                ori_noise=ori_noise,
+                pos_noise_thresh=2 * pos_noise,
+                ori_noise_thresh=2 * ori_noise,
+                max_trials=10,
+                verbose=verbose,
+                rng=self.np_random,
+            )
+            if start_state is None:
+                continue
+
+            if no_validation:
+                return start_state
+
+            if check_start_state(
+                self._sim,
+                self,
+                *start_state,
+                task_type="pick",
+                max_collision_force=0.0,
+                verbose=verbose,
+            ):
+                if verbose:
+                    print(f"Find a valid start state at {i}-th trial")
+                return start_state

@@ -1,0 +1,4 @@
+__BASE__: "{fileDirname}/tidy_house_v1.yaml"
+
+TASK:
+  TYPE: TidyHouseTask-v1
