@@ -77,13 +77,13 @@ TASK:
   StageSuccess:
     TYPE: StageSuccess
     GOALS:
-      nav_pick_0:
-        - "robot_at(target_obj_pos,float|1.5)"
+      #nav_pick_0:
+      #  - "robot_at(target_obj_pos,float|1.5)"
       pick_0:
         - "holding(target_obj)"
         - "ee_at_rest(float|0.15)"
-      nav_place_0:
-        - "robot_at(target_goal_pos,float|1.5)"
+      #nav_place_0:
+      #  - "robot_at(target_goal_pos,float|1.5)"
       place_0:
         - "not_holding()"
         - "at(target_obj_pos,target_goal_pos)"
@@ -95,9 +95,9 @@ TASK:
   CompositeReward:
     TYPE: CompositeReward
     STAGE_MEASURES:
-      - [RearrangeNavReward]
+      #- [RearrangeNavReward]
       - [RearrangePickReward]
-      - [RearrangeNavReward]
+      #- [RearrangeNavReward]
       - [RearrangePlaceReward]
       - [RearrangePlaceReward]
     MEASUREMENTS:

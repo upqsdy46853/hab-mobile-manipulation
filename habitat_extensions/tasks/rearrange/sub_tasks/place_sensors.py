@@ -141,6 +141,7 @@ class RearrangePlaceRewardV1(RearrangePlaceReward):
             self.prev_dist_to_goal = gripper_to_resting_dist
         elif gripper_status == GripperStatus.PICK_CORRECT:
             self.prev_dist_to_goal = obj_to_goal_dist
+            task._is_episode_active = False
         elif gripper_status == GripperStatus.HOLDING_CORRECT:
             if self._config.USE_DIFF:
                 if self.prev_dist_to_goal is None:
