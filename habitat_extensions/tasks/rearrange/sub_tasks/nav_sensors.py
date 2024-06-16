@@ -219,8 +219,10 @@ class RearrangeNavRewardV1(MyMeasure):
 
         if self._sim.gripper.is_grasped:
             T = mn.Matrix4.translation(task.place_goal)
+            self.goal = task.place_goal
         else:
             T = mn.Matrix4.translation(task.pick_goal)
+            self.goal = task.pick_goal
         self.nav_goals = compute_region_goals_v1(
             self._sim,
             T,
@@ -246,6 +248,10 @@ class RearrangeNavRewardV1(MyMeasure):
             self._sim.robot.base_pos, self.nav_goals, episode=episode
         )
 
+        offset = self.goal - np.array(self._sim.robot.base_pos)
+        goal_ori = np.arctan2(-offset[2], offset[0])
+        ang_dist = np.abs(wrap_angle(goal_ori - self._sim.robot.base_ori))
+
         if not np.isfinite(geo_dist):
             logger.warning("The geodesic distance is not finite!")
             geo_dist = self.prev_geo_dist
@@ -257,7 +263,8 @@ class RearrangeNavRewardV1(MyMeasure):
             diff_geo_dist = round(diff_geo_dist, 3)
 
         geo_dist_reward = diff_geo_dist * self._config.GEO_DIST_REWARD
-        reward += geo_dist_reward
+        if ang_dist <= 1.5:
+            reward += geo_dist_reward
         self.prev_geo_dist = geo_dist
 
         if self._sim.gripper.is_grasped != self.prev_is_grasped:
